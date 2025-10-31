@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clicker Tycoon</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #4A90E2;
+            --primary-hover: #5AA0F2;
+            --text-color: #ffffff;
+            --text-secondary: #b0b0b0;
+            --disabled-color: #444;
+            --green: #4CAF50;
+            --danger-color: #E74C3C; /* Added for losses */
+            --purple: #8e44ad;
+            --purple-hover: #9b59b6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--surface-color);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Stats Header */
+        .stats-header {
+            padding: 24px;
+            text-align: center;
+            border-bottom: 1px solid var(--disabled-color);
+        }
+
+        .money-display {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-color);
+            line-height: 1.2;
+        }
+
+        .ips-display {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--green);
+            margin: 8px 0 0 0;
+            height: 1.2em; /* Reserve space to prevent layout shift */
+        }
+
+        /* Clicker Area */
+        .clicker-area {
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        #click-button {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+            transition: all 0.1s ease-out;
+        }
+
+        #click-button:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.2);
+        }
+
+        /* --- New Gemini Feature Button (REMOVED) --- */
+        /* #tip-button ... (all styles removed) */
+
+
+        /* Click floating text */
+        .click-text {
+            position: absolute;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+            opacity: 0;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-80px) scale(0.8);
+            }
+        }
+
+        /* Shop Area */
+        .shop-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 20px 24px;
+            margin: 0;
+            border-top: 1px solid var(--disabled-color);
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        .shop-list {
+            list-style-type: none;
+            margin: 0;
+            padding: 0 0 16px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--disabled-color);
+        }
+
+        .shop-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .item-icon {
+            font-size: 1.5rem;
+            margin-right: 16px;
+        }
+
+        .item-details h4 {
+            margin: 0 0 4px 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .item-desc {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .item-cost {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .buy-button {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.1s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+        
+        .buy-button .owned {
+             font-size: 0.75rem;
+             opacity: 0.8;
+        }
+
+        .buy-button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .buy-button:disabled {
+            background-color: var(--disabled-color);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        /* --- New Gemini Modal Styles (REMOVED) --- */
+        /* #modal-overlay ... (all styles removed) */
+
+
+        /* --- Casino Styles --- */
+        .casino-area {
+            padding: 0 16px 16px 16px;
+        }
+
+        .casino-games {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Changed from auto-fit */
+            gap: 16px;
+        }
+
+        .casino-game {
+            background-color: var(--bg-color); /* Darker than surface */
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .game-icon {
+            font-size: 1.75rem;
+        }
+
+        .game-header h4 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .game-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 8px 0 16px 0;
+            min-height: 2.2em; /* Reserve space */
+        }
+
+        .bet-controls {
+            display: grid;
+            gap: 8px;
+        }
+        
+        /* Specific grid templates for button layouts */
+        .casino-game:nth-child(1) .bet-controls { grid-template-columns: 1fr 1fr; } /* Coin Flip */
+        .casino-game:nth-child(1) .bet-controls input { grid-column: 1 / -1; } /* Span input */
+        
+        .casino-game:nth-child(2) .bet-controls { grid-template-columns: 1fr; } /* Slot */
+        /* Removed rules for child 3 and 4 */
+
+
+        .bet-input {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--surface-color);
+            border: 1px solid var(--disabled-color);
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--text-color);
+            font-size: 0.875rem;
+            width: 100%;
+            box-sizing: border-box; /* Important for 100% width */
+        }
+        
+        .bet-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .casino-btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .casino-btn:active {
+            transform: scale(0.96);
+        }
+
+        .heads-btn { background-color: #F1C40F; color: #333; }
+        .tails-btn { background-color: #3498DB; color: white; }
+        /* .dice-btn { background-color: var(--green); color: white; } */ /* Removed */
+        .slot-btn { background-color: var(--purple); color: white; }
+        /* .high-btn { background-color: var(--danger-color); color: white; } */ /* Removed */
+        /* .low-btn { background-color: #3498DB; color: white; } */ /* Removed */
+        
+        .slot-display, .card-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .slot-symbol, .current-card {
+            font-size: 2rem;
+            background-color: var(--surface-color);
+            padding: 10px 16px;
+            border-radius: 8px;
+            min-width: 40px;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Removed .current-card */
+        /*
+        .current-card {
+            font-weight: 700;
+        }
+        */
+
+        .casino-result {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            min-height: 1.2em; /* Reserve space */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Stats -->
+        <header class="stats-header">
+            <h1 class="money-display">$<span id="money-display">0</span></h1>
+            <!-- 
+              FIX: Removed the span and extra text. 
+              The 'ips-display' ID is now on the <p> tag itself.
+            -->
+            <p class="ips-display" id="ips-display">$0 per second</p>
+        </header>
+
+        <!-- Clicker -->
+        <div class="clicker-area" id="clicker-area">
+            <button id="click-button">Make Money</button>
+            <!-- <button id="tip-button">✨ Get Business Tip</button> --> <!-- REMOVED -->
+        </div>
+
+        <!-- Casino Corner -->
+        <h3 class="shop-header">🎰 Casino Corner</h3>
+        <div class="casino-area">
+            <div class="casino-games" id="casino-games">
+                <!-- Coin Flip -->
+                <div class="casino-game">
+                    <div class="game-header">
+                        <span class="game-icon">🪙</span>
+                        <h4>Coin Flip</h4>
+                    </div>
+                    <p class="game-desc">50/50 chance • Win 2x your bet</p>
+                    <div class="bet-controls">
+                        <input type="number" id="coinflip-bet" class="bet-input" placeholder="Bet amount" min="1">
+                        <button class="casino-btn heads-btn" data-game="coinflip" data-choice="heads">Heads</button>
+                        <button class="casino-btn tails-btn" data-game="coinflip" data-choice="tails">Tails</button>
+                    </div>
+                </div>
+
+                <!-- Dice Roll (Removed) -->
+                
+                <!-- Slot Machine -->
+                <div class="casino-game">
+                    <div class="game-header">
+                        <span class="game-icon">🎰</span>
+                        <h4>Slot Machine</h4>
+                    </div>
+                    <p class="game-desc">Match 3 symbols • 2 = 3x, 3 = 10x</p>
+                    <div class="slot-display" id="slot-display">
+                        <span class="slot-symbol">🍒</span>
+                        <span class="slot-symbol">🍋</span>
+                        <span class="slot-symbol">💎</span>
+                    </div>
+                    <div class="bet-controls">
+                        <input type="number" id="slot-bet" class="bet-input" placeholder="Bet amount" min="1">
+                        <button class="casino-btn slot-btn" data-game="slot">Spin!</button>
+                    </div>
+                </div>
+
+                <!-- High/Low (Removed) -->
+                
+            </div>
+            <div class="casino-result" id="casino-result">Place your bets!</div>
+        </div>
+
+        <!-- Shop -->
+        <h3 class="shop-header">Buy Assets</h3>
+        <ul class="shop-list" id="shop-list">
+            <!-- Items will be generated by JavaScript -->
+        </ul>
+    </div>
+
+    <!-- New Gemini Modal (REMOVED) -->
+    <!-- <div id="modal-overlay"> ... </div> -->
+
+    <script>
+        // --- Game State ---
+        let money = 0;
+        let incomePerSecond = 0;
+        let clickValue = 1;
+        /* let currentCardValue = 0; */ // Removed For High/Low game
+        const API_KEY = ""; // Leave as-is for the environment (though no longer used)
+
+        // --- Shop Items Data ---
+        const shopItems = [
+            { id: 'clicker', name: 'Clicker Training', icon: '👆', baseCost: 10, costIncrease: 1.5, income: 0, clickIncrease: 1, owned: 0 },
+            { id: 'autoclicker', name: 'Auto Clicker', icon: '🖱️', baseCost: 50, costIncrease: 1.15, income: 1, clickIncrease: 0, owned: 0 },
+            { id: 'car', name: 'Sports Car', icon: '🚗', baseCost: 100, costIncrease: 1.15, income: 2, clickIncrease: 0, owned: 0 },
+            { id: 'boat', name: 'Yacht', icon: '⛵', baseCost: 1500, costIncrease: 1.15, income: 10, clickIncrease: 0, owned: 0 },
+            { id: 'house', name: 'Mansion', icon: '🏠', baseCost: 20000, costIncrease: 1.15, income: 80, clickIncrease: 0, owned: 0 },
+            { id: 'property', name: 'Skyscraper', icon: '🏙️', baseCost: 300000, costIncrease: 1.15, income: 500, clickIncrease: 0, owned: 0 },
+            { id: 'plane', name: 'Private Jet', icon: '✈️', baseCost: 5000000, costIncrease: 1.15, income: 3000, clickIncrease: 0, owned: 0 },
+            { id: 'rocket', name: 'Space Rocket', icon: '🚀', baseCost: 100000000, costIncrease: 1.15, income: 25000, clickIncrease: 0, owned: 0 },
+        ];
+
+        // --- DOM Elements ---
+        const moneyDisplay = document.getElementById('money-display');
+        const ipsDisplay = document.getElementById('ips-display'); // This now correctly targets the <p> element
+        const clickButton = document.getElementById('click-button');
+        const clickerArea = document.getElementById('clicker-area');
+        const shopList = document.getElementById('shop-list');
+
+        // New Gemini Elements (REMOVED)
+        // const tipButton = document.getElementById('tip-button');
+        // const modalOverlay = document.getElementById('modal-overlay');
+        // const modalContent = document.getElementById('modal-content');
+        // const modalCloseButton = document.getElementById('modal-close-button');
+
+        // Casino Elements
+        const casinoGames = document.getElementById('casino-games');
+        const casinoResult = document.getElementById('casino-result');
+        const slotDisplay = document.getElementById('slot-display');
+        /* const currentCardDisplay = document.getElementById('current-card'); */ // Removed
+
+
+        // --- Utility Functions ---
+
+        /**
+         * Formats large numbers into short scale (K, M, B, T)
+         * @param {number} num - The number to format
+         * @returns {string} The formatted number
+         */
+        function formatNumber(num) {
+            if (num < 1000) return num.toFixed(0);
+            const suffixes = ["", "K", "M", "B", "T", "Qa", "Qi"];
+            const i = Math.floor(Math.log10(num) / 3);
+            const value = (num / Math.pow(1000, i));
+            
+            // Avoid "1000K", show "1M" instead
+            if (value >= 1000) {
+                return (value / 1000).toFixed(2) + suffixes[i+1];
+            }
+            // Use 2 decimal places for 1.23M, 1 decimal for 12.3M, 0 for 123M
+            return value.toFixed(value < 10 ? 2 : (value < 100 ? 1 : 0)) + suffixes[i];
+        }
+
+        /**
+         * Calculates the current cost of a shop item
+         * @param {object} item - The shop item object
+         * @returns {number} The current cost
+         */
+        function getItemCost(item) {
+            return Math.floor(item.baseCost * Math.pow(item.costIncrease, item.owned));
+        }
+        
+        /**
+         * Parses the bet from an input field
+         * @param {string} inputId - The ID of the bet input
+         * @returns {number|null} The bet amount or null if invalid
+         */
+        function parseBet(inputId) {
+            const input = document.getElementById(inputId);
+            const bet = parseInt(input.value);
+
+            if (isNaN(bet) || bet <= 0) {
+                casinoResult.textContent = "Please enter a valid bet amount.";
+                casinoResult.style.color = 'var(--danger-color)';
+                input.value = '';
+                return null;
+            }
+            if (bet > money) {
+                casinoResult.textContent = "You don't have enough money for that bet!";
+                casinoResult.style.color = 'var(--danger-color)';
+                return null;
+            }
+            return bet;
+        }
+        
+        /**
+         * Clears all bet inputs
+         */
+        function clearBetInputs() {
+            document.getElementById('coinflip-bet').value = '';
+            /* document.getElementById('dice-bet').value = ''; */ // Removed
+            document.getElementById('slot-bet').value = '';
+            /* document.getElementById('highlow-bet').value = ''; */ // Removed
+        }
+
+        // --- Game Logic ---
+
+        /**
+         * Handles the main money click
+         */
+        function clickMoney(e) {
+            money += clickValue;
+            updateUI();
+            showClickEffect(e);
+        }
+
+        /**
+         * Shows a floating "+{amount}" text on click
+         */
+        function showClickEffect(e) {
+            const amount = clickValue;
+            const clickText = document.createElement('span');
+            clickText.className = 'click-text';
+            clickText.textContent = `+$${formatNumber(amount)}`;
+            
+            // Position at cursor
+            const rect = clickerArea.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            clickText.style.left = `${x}px`;
+            clickText.style.top = `${y}px`;
+
+            clickerArea.appendChild(clickText);
+
+            // Remove after animation
+            setTimeout(() => {
+                clickText.remove();
+            }, 1000);
+        }
+
+        /**
+         * Handles buying an item from the shop
+         * @param {string} itemId - The ID of the item to buy
+         */
+        function buyItem(itemId) {
+            const item = shopItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            const cost = getItemCost(item);
+            if (money >= cost) {
+                money -= cost;
+                item.owned++;
+                
+                if (item.income > 0) {
+                    incomePerSecond += item.income;
+                }
+                if (item.clickIncrease > 0) {
+                    clickValue += item.clickIncrease;
+                }
+                
+                updateUI(); // Update money and redraw shop
+            }
+        }
+
+        /**
+         * Applies passive income every second
+         */
+        function applyPassiveIncome() {
+            money += incomePerSecond;
+            updateUI(); // Update money, but don't re-render shop every second
+            /* updateMoneyAndButtons(); */ // <-- Removed stray function call
+        }
+        
+        /*
+            REMOVED: This block was corrupted/stray code.
+            
+            updateMoneyAndButtons();
+        }
+        */
+
+        // --- Casino Logic ---
+
+        /**
+         * Draws a card for the High/Low game (2-14, where 14 is Ace)
+         * @returns {number} The value of the card
+         */
+        /* function drawCard() {
+            const value = Math.floor(Math.random() * 13) + 2; // 2-14
+            let display = value;
+            if (value === 11) display = 'J';
+            if (value === 12) display = 'Q';
+            if (value === 13) display = 'K';
+            if (value === 14) display = 'A';
+            
+            currentCardDisplay.textContent = display;
+            currentCardValue = value;
+            return value;
+        }
+        */ // Removed
+
+        /**
+         * Handles the click event for any casino button
+         */
+        function handleCasinoClick(e) {
+            const button = e.target.closest('.casino-btn');
+            if (!button) return;
+
+            const game = button.dataset.game;
+            const choice = button.dataset.choice; // 'heads', 'tails', 'high', 'low', or undefined
+
+            playCasinoGame(game, choice);
+        }
+
+        /**
+         * Main logic hub for all casino games
+         * @param {string} game - The game ID (e.g., 'coinflip')
+         * @param {string} [choice] - The user's choice (if applicable)
+         */
+        function playCasinoGame(game, choice) {
+            const bet = parseBet(`${game}-bet`);
+            if (bet === null) return;
+
+            money -= bet;
+            let winnings = 0;
+            let message = '';
+            casinoResult.textContent = '...'; // Loading state
+
+            // Use setTimeout to create a small delay for suspense
+            setTimeout(() => {
+                switch (game) {
+                    case 'coinflip':
+                        const result = Math.random() < 0.5 ? 'heads' : 'tails';
+                        message = `It was ${result}!`;
+                        if (result === choice) {
+                            winnings = bet * 2;
+                        }
+                        break;
+
+                    /* case 'dice':
+                        const roll = Math.floor(Math.random() * 6) + 1;
+                        message = `You rolled a ${roll}!`;
+                        if (roll >= 4) {
+                            winnings = bet * 2;
+                        }
+                        break;
+                    */ // Removed
+                    
+                    case 'slot':
+                        const symbols = ['🍒', '🍋', '💎', '💰', '7️⃣'];
+                        const reels = [
+                            symbols[Math.floor(Math.random() * symbols.length)],
+                            symbols[Math.floor(Math.random() * symbols.length)],
+                            symbols[Math.floor(Math.random() * symbols.length)]
+                        ];
+                        // Update display
+                        slotDisplay.innerHTML = reels.map(s => `<span class="slot-symbol">${s}</span>`).join('');
+                        message = `You spn ${reels.join(' ')}!`;
+                        
+                        if (reels[0] === reels[1] && reels[1] === reels[2]) {
+                            winnings = bet * 10; // 3 matches
+                        } else if (reels[0] === reels[1] || reels[1] === reels[2] || reels[0] === reels[2]) {
+                            winnings = bet * 3; // 2 matches
+                        }
+                        break;
+                    
+                    /*
+                    case 'highlow':
+                        const newCardValue = drawCard();
+                        let outcome = 'draw';
+                        if (newCardValue > currentCardValue) outcome = 'high';
+                        if (newCardValue < currentCardValue) outcome = 'low';
+
+                        message = `New card is ${currentCardDisplay.textContent}.`;
+                        
+                        if (outcome === 'draw') {
+                            winnings = bet; // Return bet
+                            message += " It's a draw!";
+                        } else if (outcome === choice) {
+                            winnings = Math.floor(bet * 1.8);
+                        }
+                        break;
+                    */ // Removed
+                }
+                
+                showCasinoResult(winnings, bet, message);
+
+            }, 300); // 300ms delay
+        }
+
+        /**
+         * Displays the outcome of the gamble
+         * @param {number} winnings - The amount won (0 if lost)
+         * @param {number} bet - The original bet amount
+         * @param {string} message - The game-specific message
+         */
+        function showCasinoResult(winnings, bet, message) {
+            if (winnings > bet) { // Won
+                money += winnings;
+                casinoResult.textContent = `${message} You won $${formatNumber(winnings - bet)}!`;
+                casinoResult.style.color = 'var(--green)';
+            } else if (winnings === bet) { // Draw (High/Low)
+                money += winnings;
+                casinoResult.textContent = `${message} Bet returned.`;
+                casinoResult.style.color = 'var(--text-secondary)';
+            } else { // Lost
+                casinoResult.textContent = `${message} You lost $${formatNumber(bet)}...`;
+                casinoResult.style.color = 'var(--danger-color)';
+            }
+            
+            clearBetInputs();
+            updateUI();
+        }
+
+
+        // --- UI Update ---
+
+        /**
+         * Updates all UI elements with current game state
+         */
+        function updateUI() {
+            moneyDisplay.textContent = formatNumber(money);
+            
+            // FIX: This logic now correctly targets the <p> tag
+            if (incomePerSecond > 0) {
+                ipsDisplay.textContent = `$${formatNumber(incomePerSecond)} per second`;
+            } else {
+                ipsDisplay.textContent = "Click to earn!";
+            }
+            
+            clickButton.innerHTML = `Make Money<br><span style="font-size: 0.9rem; font-weight: 400;">(+$${formatNumber(clickValue)})</span>`;
+
+            renderShop();
+        }
+
+        /**
+         * Re-draws the shop list
+         */
+        function renderShop() {
+            shopList.innerHTML = ''; // Clear existing list
+            
+            shopItems.forEach(item => {
+                const cost = getItemCost(item);
+                const canAfford = money >= cost;
+
+                let desc = '';
+                if (item.income > 0) {
+                    desc = `+ $${formatNumber(item.income)} / sec`;
+                } else if (item.clickIncrease > 0) {
+                    desc = `+ $${formatNumber(item.clickIncrease)} / click`;
+                }
+                
+                const li = document.createElement('li');
+                li.className = 'shop-item';
+                li.innerHTML = `
+                    <div class="item-info">
+                        <span class="item-icon">${item.icon}</span>
+                        <div class="item-details">
+                            <h4>${item.name}</h4>
+                            <p class="item-desc">${desc}</p>
+                        </div>
+                    </div>
+                    <button class="buy-button" data-item="${item.id}" ${canAfford ? '' : 'disabled'}>
+                        <span class="item-cost">$${formatNumber(cost)}</span>
+                        <span class="owned">Owned: ${item.owned}</span>
+                    </button>
+                `;
+                shopList.appendChild(li);
+            });
+        }
+
+        // --- New Gemini Functions (REMOVED) ---
+        /*
+        async function fetchWithBackoff(...) { ... }
+        function getOwnedAssetsString() { ... }
+        async function getBusinessTip() { ... }
+        function handleTipClick() { ... }
+        function closeModal() { ... }
+        */
+
+        // --- Initialization ---
+
+        function init() {
+            // Attach event listeners
+            clickButton.addEventListener('click', clickMoney);
+            // tipButton.addEventListener('click', handleTipClick); // REMOVED
+            // modalCloseButton.addEventListener('click', closeModal); // REMOVED
+            // modalOverlay.addEventListener('click', (e) => { ... }); // REMOVED
+
+            // Use event delegation for shop buttons
+            shopList.addEventListener('click', (e) => {
+                const button = e.target.closest('.buy-button');
+                if (button) {
+                    buyItem(button.dataset.item);
+                }
+            });
+            
+            // Use event delegation for casino buttons
+            casinoGames.addEventListener('click', handleCasinoClick);
+
+            // Start game loop
+            setInterval(applyPassiveIncome, 1000);
+            
+            // Initial render
+            /* drawCard(); */ // Removed
+            updateUI();
+        }
+
+        // Start the game
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
